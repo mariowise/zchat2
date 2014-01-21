@@ -212,7 +212,7 @@ chatWindow.prototype.maxMini = function (dude, fast) {
 */
 function chatFriends(_domObj, _holdBar) {
 	var self = this;
-	this.state = 'open';
+	this.state = 'close';
 	this.domObj = _domObj;
 	this.holdBar = _holdBar;
 	this.hider = $(this.domObj).children('.hider')[0];
@@ -224,8 +224,6 @@ function chatFriends(_domObj, _holdBar) {
 			self.open();
 	});
 
-	self.state = 'close'
-	
 	$($(this.domObj).find('.fa-chevron-right')[0]).attr('class', 'fa-chevron-left')
 
 	$('<audio id="new-message-sounds" controls></audio>')
@@ -462,5 +460,12 @@ function zchat(_id, _username, _secret) {
 			chatWindow.prototype.barlist.count--;
 			$('#chat-bar > [name="'+ tabId +'"]').remove();
 		}
-	});
+	})
+	socket.on('set-chatFriends', function (state) {
+		if(state == 'opened') {
+			$('#chat-friends').css('width', '200px')
+			$($('#chat-friends').find('.fa-chevron-left')[0]).attr('class', 'fa-chevron-right')
+			cf.state = 'open'
+		}
+	})
 }

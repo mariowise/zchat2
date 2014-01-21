@@ -70,6 +70,11 @@ module.exports = function (_io, _socketsById) {
 					if(err) return;
 					socket.emit('open-tabs', list)
 				})
+
+				User.findOne({ _id: socket.lid }, function (err, neo) {
+					if(err) return;
+					socket.emit('set-chatFriends', neo.chatFriends)
+				})
 				// User.findOne({ _id: socket.lid }, function (err, neo) {
 				// 	if(err) return;
 				// 	socket.emit('open-tabs', neo.openRooms);
