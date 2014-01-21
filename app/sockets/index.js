@@ -40,6 +40,11 @@ io.sockets.on('connection', function(socket) {
 	})
 
 
+	socket.on('alert-create', function(peerId) {
+		_alert.alertCreate(socket, peerId)
+	})
+
+
 	socket.on('open-tab', function (roomId) {
 		_user.openRoom(socket, roomId)
 	})

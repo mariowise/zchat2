@@ -19,6 +19,14 @@ module.exports = function (_io, _socketsById) {
 		Alert.setZero(socket.lid, peerId)
 	}
 
+	this.alertCreate = function (socket, peerId) {
+		Alert.add(socket.lid, peerId, function () {
+			Alert.find({ userId: socket.lid }, function(err, docs) {
+				socket.emit('alerts-flush', docs);
+			});
+		})
+	}
+
 	return this
 }
 

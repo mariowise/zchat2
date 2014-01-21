@@ -67,8 +67,7 @@ chatWindow.prototype.create = function(holder) {
 	});
 	self.setDNDHandlers(newOne);
 	
-	var aviable = $(holder).width() - self.barlistUsedWidth($(holder)) - 273
-	if(aviable < 273) {
+	if(!this.thereIsSpace($(holder))) {
 		console.log("Eliminando " + $(holder).children().first().attr('name'))
 		$(holder).children().first().find('.fa-times').click()
 	}
@@ -119,48 +118,48 @@ chatWindow.prototype.beginAlert = function() {
 chatWindow.prototype.setDNDHandlers = function (elem) {
 	var self = this;
 
-	$(elem).bind('drop', function (evnt) {
-		var piggy = DND_Piggy.get('piggy')
-		  , userList = $(this).attr('name').split('$$')
-		  , oldUserList = [].concat(userList)
-		  , stringify = ''
+	// $(elem).bind('drop', function (evnt) {
+	// 	var piggy = DND_Piggy.get('piggy')
+	// 	  , userList = $(this).attr('name').split('$$')
+	// 	  , oldUserList = [].concat(userList)
+	// 	  , stringify = ''
 		
-		if(userList.indexOf(piggy.fid) != -1)
-			return
-		if(userList.indexOf(socket.lid) == -1)
-			userList.push(socket.lid)
+	// 	if(userList.indexOf(piggy.fid) != -1)
+	// 		return
+	// 	if(userList.indexOf(socket.lid) == -1)
+	// 		userList.push(socket.lid)
 
-		userList.push(piggy.fid)
-		userList.sort()
-		oldUserList.sort()
+	// 	userList.push(piggy.fid)
+	// 	userList.sort()
+	// 	oldUserList.sort()
 		
-		console.log('solicitando creación de nueva sala grupal'+
-			$(this).attr('name') + ' <= ' + piggy.fid)		
+	// 	console.log('solicitando creación de nueva sala grupal'+
+	// 		$(this).attr('name') + ' <= ' + piggy.fid)		
 
-		socket.emit('create-group', userList)
+	// 	socket.emit('create-group', userList)
 
-		$(this).attr('name', userList.join('$$'))
-		$(this).children('.header').append(', ' + piggy.name)
+	// 	$(this).attr('name', userList.join('$$'))
+	// 	$(this).children('.header').append(', ' + piggy.name)
 
-		// Actualizar las ventanas de los demás!
-		socket.emit('update-chatWindow', {
-			oldId: oldUserList.join('$$')
-			, newId: userList.join('$$')
-			, newHeader: $(this).children('.header').html()
-		})
+	// 	// Actualizar las ventanas de los demás!
+	// 	socket.emit('update-chatWindow', {
+	// 		oldId: oldUserList.join('$$')
+	// 		, newId: userList.join('$$')
+	// 		, newHeader: $(this).children('.header').html()
+	// 	})
 		
-		var buff = chatWindow.prototype.barlist[self.id]
-		delete chatWindow.prototype.barlist[self.id]
-		self.id = userList.join('$$')
-		self.title = piggy.name
-		chatWindow.prototype.barlist[self.id] = buff
+	// 	var buff = chatWindow.prototype.barlist[self.id]
+	// 	delete chatWindow.prototype.barlist[self.id]
+	// 	self.id = userList.join('$$')
+	// 	self.title = piggy.name
+	// 	chatWindow.prototype.barlist[self.id] = buff
 
-		console.log('Setteando objeto chatWindow')
-		console.log(self)
-	});
-	$(elem).bind('dragover', function (evnt) {
-		evnt.preventDefault()
-	});
+	// 	console.log('Setteando objeto chatWindow')
+	// 	console.log(self)
+	// });
+	// $(elem).bind('dragover', function (evnt) {
+	// 	evnt.preventDefault()
+	// });
 }
 chatWindow.prototype.maxMini = function (dude, fast) {
 	var showSpeed = (!fast) ? [400, 600] : [0, 0]
@@ -196,6 +195,12 @@ chatWindow.prototype.barlistUsedWidth = function (dude) {
 	})
 	// console.log("barlistUsedWidth => "+ width)
 	return width
+}
+chatWindow.prototype.thereIsSpace = function (holder) {
+	var aviable = $(holder).width() - chatWindow.prototype.barlistUsedWidth($(holder)) - 273
+	if(aviable < 273)
+		return false;
+	return true;
 }
 
 
@@ -274,6 +279,9 @@ chatFriends.prototype.updateFriend = function(_friend) {
 	if(friend != undefined) {
 		$(friend).removeClass('online offline');
 		$(friend).addClass(_friend.state);
+		if(_friend.state == 'online') {
+			$(friend).prependTo($('#chat-friends > .list'))
+		}
 		return;
 	}
 	var list = $(this.domObj).find('.list')[0];
@@ -387,11 +395,18 @@ function zchat(_id, _username, _secret) {
 			chatWindow.prototype.barlist[fid].beginAlert();
 		// Chat individual cerrado
 		} else {
-			$('.chat-friend[fid="'+ fid +'"]').click();
-			setTimeout(function() {
-				if(chatWindow.prototype.barlist[fid] != undefined)
-					chatWindow.prototype.barlist[fid].beginAlert();
-			}, 500);
+			if(chatWindow.prototype.thereIsSpace($('#chat-bar'))) {
+				$('.chat-friend[fid="'+ fid +'"]').click();
+				setTimeout(function() {
+					if(chatWindow.prototype.barlist[fid] != undefined)
+						chatWindow.prototype.barlist[fid].beginAlert();
+				}, 500);
+			} else {
+				if(socket.lid != fid) {
+					$('#new-message-sounds').trigger('play')
+					socket.emit('alert-create', fid)
+				}
+			}
 		}
 		if(socket.lid != fid)
 			$('#new-message-sounds').trigger('play')
