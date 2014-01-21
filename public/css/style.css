@@ -1,0 +1,216 @@
+@import url(http://fonts.googleapis.com/css?family=Roboto+Slab:400,300,100,700);
+.chat-window {
+  position: relative;
+  border-top: 1px solid #b4b4b4;
+  border-left: 1px solid #b4b4b4;
+  border-right: 1px solid #b4b4b4;
+  width: 250px;
+  font-family: 'Roboto Slab', serif;
+  font-size: 12px;
+  background: #f5f5f5;
+}
+.chat-window > .header {
+  border-bottom: 1px solid #b4b4b4;
+  background-color: #CF4F4B;
+  color: white;
+  padding: 2.5px 5px;
+}
+.chat-window > .body {
+  height: 200px;
+  padding: 5px;
+  overflow-y: scroll;
+}
+.chat-window > .body .msg > .header {
+  font-weight: bolder;
+  color: #D34949;
+  border: 0px;
+}
+.chat-window > .body .msg > .body {
+  padding-left: 20px;
+}
+.chat-window > .body .msg.self .header {
+  text-align: right;
+  color: #E0A5A5;
+}
+.chat-window > .body .msg.self .body {
+  text-align: right;
+  padding-right: 20px;
+}
+.chat-window > .actions {
+  padding: 5px;
+  border-top: 1px solid #b4b4b4;
+  position: relative;
+  height: 50px;
+}
+.chat-window > .actions > textarea {
+  border-radius: 0px;
+  width: 210px;
+  font-size: 12px;
+  resize: none;
+  border-color: #CCC;
+}
+.chat-window > .actions > button {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  border-radius: 0px;
+  z-index: 10;
+  font-size: 12px;
+}
+.chat-window > .fa-times {
+  position: absolute;
+  top: 2.5px;
+  right: 7.5px;
+  color: white;
+  font-family: FontAwesome;
+  font-style: normal;
+  z-index: 1;
+  width: 10px;
+}
+.chat-window > .fa-times:hover {
+  cursor: pointer;
+}
+.chat-window > .fa-plus-square {
+  position: absolute;
+  top: 2.5px;
+  right: 22px;
+  color: white;
+  font-family: FontAwesome;
+  font-style: normal;
+}
+.chat-window > .fa-plus-square:hover {
+  cursor: pointer;
+}
+#chat-bar {
+  position: fixed;
+  bottom: 0px;
+  right: 200px;
+  width: 6000px;
+  text-align: right;
+  pointer-events: none;
+}
+#chat-bar > div {
+  text-align: left;
+  display: inline-block;
+  margin-right: 20px;
+  pointer-events: auto;
+  vertical-align: bottom;
+}
+#chat-friends {
+  height: 100%;
+  width: 0px;
+  position: fixed;
+  right: 0px;
+  top: 0px;
+  border-left: 1px solid #b4b4b4;
+  background: #f5f5f5;
+  font-family: 'Roboto Slab', serif;
+  font-size: 12px;
+}
+#chat-friends > .list {
+  overflow-y: scroll;
+  width: 100%;
+  height: 100%;
+}
+#chat-friends > .list > .chat-friend {
+  line-height: 35px;
+  padding-left: 10px;
+  border-left: 5px solid #52D553;
+  border-bottom: 1px solid #C2C2C2;
+  border-left: 5px solid #BDBDBD;
+  position: relative;
+}
+#chat-friends > .list > .chat-friend.online {
+  border-left: 5px solid #52D553;
+}
+#chat-friends > .list > .chat-friend:hover {
+  background-color: #ebebeb;
+  cursor: pointer;
+}
+#chat-friends > .list > .chat-friend > .alert-no {
+  position: absolute;
+  right: 15px;
+  top: 7px;
+  background-color: #CCC;
+  height: 20px;
+  width: 25px;
+  line-height: 20px;
+  color: red;
+  text-align: center;
+  font-weight: bold;
+  border: 1px solid #AFAFAF;
+}
+#chat-friends > .list > .chat-friend > .alert-no:after {
+  content: "";
+  position: absolute;
+  border-style: solid;
+  border-width: 7px 7px 7px 0px;
+  border-color: transparent #CCC;
+  display: block;
+  width: 0px;
+  z-index: 1;
+  left: -7px;
+  top: 3px;
+}
+#chat-friends > .hider {
+  position: absolute;
+  left: -15px;
+  top: 0px;
+  width: 15px;
+  height: 100%;
+  color: #969696;
+  text-align: center;
+  display: table;
+}
+#chat-friends > .hider > i {
+  font-style: normal;
+  font-family: FontAwesome;
+  display: table-cell;
+  vertical-align: middle;
+}
+#chat-friends > .hider:hover {
+  background-color: #E6E6E6;
+  cursor: pointer;
+  color: white;
+}
+#chat-friends > .search {
+  position: absolute;
+  bottom: 0px;
+  width: 185px;
+}
+#chat-friends > .search > i.fa-search {
+  position: absolute;
+  margin-left: 15px;
+  font-style: normal;
+  font-family: FontAwesome;
+  font-size: 11px;
+  top: 4px;
+}
+#chat-friends > .search > i.fa-times {
+  position: absolute;
+  right: 14px;
+  font-style: normal;
+  font-family: FontAwesome;
+  font-size: 11px;
+  color: #C2C2C2;
+  z-index: 1000;
+  top: 4px;
+}
+#chat-friends > .search > i.fa-times:hover {
+  cursor: pointer;
+}
+#chat-friends > .search > input {
+  margin-bottom: 0px;
+  border-radius: 0px;
+  width: 143px;
+  font-size: 13px;
+  height: 20px;
+  margin-left: 4px;
+  padding-left: 30px;
+  box-sizing: initial;
+  -moz-box-sizing: initial;
+  border: 1px solid #CCC;
+}
+.panic {
+  background-color: #FA504A!important;
+}

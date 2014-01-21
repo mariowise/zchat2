@@ -1,0 +1,22 @@
+{% extends "layouts/layout.html" %}
+{% block CONTENT %}
+
+<div id="chat-bar"></div>
+
+<div id="chat-friends">
+	<div class="hider"><i class="fa-chevron-right"></i></div>
+	<div class="list"></div>
+</div>
+
+<script type="text/javascript" src="http://localhost:3100/socket.io/socket.io.js"></script>
+<script type="text/javascript" src="/js/chat.js"></script>
+<script type="text/javascript">
+	var cf = new chatFriends($('#chat-friends')[0], $('#chat-bar'));
+	cf.updateFriend({ id: 1, name: 'Mario López', state: 'online' });
+	cf.updateFriend({ id: 2, name: 'Aldo Navarrete', state: 'online' });
+	cf.updateFriend({ id: 3, name: 'Usuario anónimo', state: 'offline' });
+	cf.updateFriend({ id: 4, name: 'María Paz', state: 'offline' });
+	cf.updateFriend({ id: 5, name: 'Alicia antonia', state: 'offline' });
+</script>
+
+{% endblock %}
