@@ -13,7 +13,7 @@ alertSchema.statics = {
 
 	add: function (userId, peerId, next) {
 		this.update(
-			{ userId: userId },
+			{ userId: userId, peerId: peerId },
 			{ $inc: { cant: 1 } },
 			{ upsert: true },
 			function (err, numberAfected, raw) {
@@ -29,8 +29,8 @@ alertSchema.statics = {
 
 	, setZero: function (userId, peerId, next) {
 		this.update(
-			{ userId: userId },
-			{ $set: { cant: 1 } },
+			{ userId: userId, peerId: peerId },
+			{ $set: { cant: 0 } },
 			{ upsert: true },
 			function (err, numberAfected, raw) {
 				if(err) {

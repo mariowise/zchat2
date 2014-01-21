@@ -67,7 +67,7 @@ messageSchema.statics = {
 
 	, getFewFromMembers: function (members, cant, next) {
 		var roomId = "$$" + members.sort().join("$$")
-		this.find({ roomId: roomId }).sort('-created').limit(cant).exec(function (err, docs) {
+		this.find({ roomId: roomId }).sort('created').limit(cant).exec(function (err, docs) {
 			if(err) {
 				console.log("* ERROR: Model Message::getFewFromMembers can't get the "+ cant +" messages from room '"+ roomId +"'")
 				console.log(err)
@@ -77,7 +77,7 @@ messageSchema.statics = {
 	}
 
 	, getFewFromRoom: function (roomId, cant, next) {
-		this.find({ roomId: roomId }).sort('-created').limit(cant).exec(function (err, docs) {
+		this.find({ roomId: roomId }).sort('created').limit(cant).exec(function (err, docs) {
 			if(err) {
 				console.log("* ERROR: Model Messge::getFewFromRoom can't get the "+ cant +" messages from room '"+ roomId +"'")
 				console.log(err)

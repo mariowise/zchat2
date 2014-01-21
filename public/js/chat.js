@@ -75,7 +75,7 @@ chatWindow.prototype.create = function(holder) {
 	$(holder).prepend(newOne);
 
 	socket.emit('message-get', [ this.id ]);
-	socket.emit('alert-pop', this.id);
+	socket.emit('alert-pop', this.id); // this.id = peerId
 	$('[fid="'+ this.id +'"] > .alert-no')
 		.html('0')
 		.fadeOut(800);
@@ -308,7 +308,7 @@ chatFriends.prototype.updateFriend = function(_friend) {
 chatFriends.prototype.pushAlert = function(list) {
 	for(el in list) {
 		if(list[el].cant != 0)
-			$('[fid="'+ list[el].peer_id +'"] > .alert-no')
+			$('[fid="'+ list[el].peerId +'"] > .alert-no')
 				.html(list[el].cant)
 				.show();
 	}
@@ -413,8 +413,8 @@ function zchat(_id, _username, _secret) {
 			})
 	});
 	socket.on('alerts-flush', function (data) {
-		// console.log('alerts-flush');
-		// console.log(data);
+		console.log('alerts-flush');
+		console.log(data);
 		chatFriends.prototype.pushAlert(data);
 	});
 	socket.on('open-tabs', function (data) {

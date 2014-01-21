@@ -51,7 +51,6 @@ userSchema.statics = {
 			neo.maxRooms.push(roomId)
 			neo.maxRooms = _.uniq(neo.maxRooms)
 			neo.save()
-			console.log(neo)
 			console.log("Model User::openRoom register roomId '"+ roomId +"' successfully.")
 			if(next) next(err, neo)
 		})
