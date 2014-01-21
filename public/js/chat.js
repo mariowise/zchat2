@@ -36,7 +36,7 @@ chatWindow.prototype.create = function(holder) {
 	$(newOne).attr('name', this.id);
 	$(newOne).attr('class', 'chat-window');
 	$(newOne).html('<i class="fa-times"></i><div class="header">'+ this.title +'</div><div class="body"><div></div></div><div class="actions"><textarea></textarea></div>');
-	$(holder).prepend(newOne);
+	// $(holder).prepend(newOne);
 	$($($(newOne).children('.actions')[0]).children('textarea')[0]).keypress(function(e) {
 		if(e.keyCode == 13 && !e.shiftKey) {
 			e.preventDefault();
@@ -61,33 +61,18 @@ chatWindow.prototype.create = function(holder) {
 	});
 	$(newOne).children('.header').click(function() {
 		self.maxMini($(newOne))
-		// if($(newOne).attr('small') != 'true') {
-		// 	$(newOne).children('.actions').slideUp(400);
-		// 	$(newOne).children('.body').slideUp(600, function() {
-		// 		$(newOne).width(150);
-		// 	});
-		// 	$(newOne).attr('small', 'true');
-		// } else {
-		// 	$(newOne).width(250);
-		// 	$(newOne).children('.actions').slideDown(400);
-		// 	$(newOne).children('.body').slideDown(600, function() {
-		// 		var wall = $(newOne).children('.body').children('div');
-		// 		var pwall = $(wall).parent();
-		// 		$(pwall).animate({ scrollTop: $(wall).height() }, 25);
-		// 	});
-		// 	$(newOne).attr('small', 'false');
-		// }
 	});
 	$(newOne).children('.actions').find('textarea').focus(function() {
 		$(newOne).attr('panic', '');
 	});
 	self.setDNDHandlers(newOne);
-
-	if(self.barlist.count * 273 > $(holder).width()) {
-		delete self.barlist[$(holder).children().first().attr('fid')];
-		self.barlist.count--;
-		$(holder).children().first().remove();
+	
+	var aviable = $(holder).width() - self.barlistUsedWidth($(holder)) - 273
+	if(aviable < 273) {
+		console.log("Eliminando " + $(holder).children().first().attr('name'))
+		$(holder).children().first().find('.fa-times').click()
 	}
+	$(holder).prepend(newOne);
 
 	socket.emit('message-get', [ this.id ]);
 	socket.emit('alert-pop', this.id);
@@ -203,6 +188,14 @@ chatWindow.prototype.maxMini = function (dude, fast) {
 			size:  'max'
 		})
 	}
+}
+chatWindow.prototype.barlistUsedWidth = function (dude) {
+	var width = 0
+	$.each($(dude).children(), function (key, item) {
+		width += $(item).outerWidth()
+	})
+	// console.log("barlistUsedWidth => "+ width)
+	return width
 }
 
 
@@ -404,8 +397,8 @@ function zchat(_id, _username, _secret) {
 			$('#new-message-sounds').trigger('play')
 	});
 	socket.on('conversation-flush', function (data) {
-		console.log('conversation-flush')
-		console.log(data)
+		// console.log('conversation-flush')
+		// console.log(data)
 		var wind = data.peer
 		if(chatWindow.prototype.barlist[wind] != undefined)
 			$.each(data.conv, function (index, elem) {
@@ -418,17 +411,6 @@ function zchat(_id, _username, _secret) {
 					created: elem.created 
 				})
 			})
-			// for(var i = data.conv.length-1; i >= 0; i--) {
-			// 	chatWindow.prototype.barlist[wind].pushMessage({ 
-			// 		from: { 
-			// 			id: data.conv[i].user_id, 
-			// 			username: data.conv[i].username 
-			// 		}, 
-			// 		msg: data.conv[i].message,
-			// 		created: data.conv[i].created 
-			// 	});
-			// 	// console.log(data.conv[i]);
-			// }
 	});
 	socket.on('alerts-flush', function (data) {
 		// console.log('alerts-flush');
@@ -436,8 +418,8 @@ function zchat(_id, _username, _secret) {
 		chatFriends.prototype.pushAlert(data);
 	});
 	socket.on('open-tabs', function (data) {
-		console.log('Recieving open-tabs')
-		console.log(data)
+		// console.log('Recieving open-tabs')
+		// console.log(data)
 		if(data != null) 
 			$.each(data, function (key, value) {
 				$('#chat-friends .list > [fid="'+ value.roomId +'"]').click()
