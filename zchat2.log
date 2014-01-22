@@ -1,0 +1,54 @@
+[33mwarn[39m:    --minUptime not set. Defaulting to: 1000ms
+[33mwarn[39m:    --spinSleepTime not set. Your script will exit if it does not stay up for at least 1000ms
+Soporte para socket.io corriendo en puerto 3100
+Express server listening on port 3000
+Todos los usuarios con estado "offline"
+Handler Security::login User 'mariowise' marked has connected.
+conversation-flush de 23 mensajes.
+Model User::openRoom register roomId 'id-admin' successfully.
+Model User::closeRoom delete openRoom for user 'id-mariowise' and room 'id-admin' successfully.
+Handler Security::login User 'admin' marked has connected.
+conversation-flush de 23 mensajes.
+Model User::openRoom register roomId 'id-mariowise' successfully.
+
+Model Message: new message from 'id-admin' to '$$id-admin$$id-mariowise'
+	Mensaje 24 online
+conversation-flush de 24 mensajes.
+Model User::openRoom register roomId 'id-admin' successfully.
+
+Model Message: new message from 'id-mariowise' to '$$id-admin$$id-mariowise'
+	Mensaje 25 online
+Model User::updateRoom Update on state for user 'id-admin' and room 'id-mariowise' now is 'min'.
+
+Model Message: new message from 'id-mariowise' to '$$id-admin$$id-mariowise'
+	Mensaje 26 online
+Model User::updateRoom Update on state for user 'id-admin' and room 'id-mariowise' now is 'max'.
+Handler Index::disconnect User 'id-admin' marked has disconnected.
+Handler Security::login User 'admin' marked has connected.
+conversation-flush de 26 mensajes.
+Model User::openRoom register roomId 'id-mariowise' successfully.
+Handler Index::disconnect User 'id-admin' marked has disconnected.
+Handler Security::login User 'admin' marked has connected.
+conversation-flush de 26 mensajes.
+Model User::openRoom register roomId 'id-mariowise' successfully.
+Model User::updateRoom Update on state for user 'id-admin' and room 'id-mariowise' now is 'min'.
+Handler Index::disconnect User 'id-admin' marked has disconnected.
+Handler Security::login User 'admin' marked has connected.
+conversation-flush de 26 mensajes.
+Model User::openRoom register roomId 'id-mariowise' successfully.
+Model User::updateRoom Update on state for user 'id-admin' and room 'id-mariowise' now is 'min'.
+Handler Index::disconnect User 'id-admin' marked has disconnected.
+Handler Security::login User 'admin' marked has connected.
+conversation-flush de 26 mensajes.
+Model User::openRoom register roomId 'id-mariowise' successfully.
+Model User::updateRoom Update on state for user 'id-admin' and room 'id-mariowise' now is 'min'.
+Handler Index::disconnect User 'id-admin' marked has disconnected.
+Handler Security::login User 'admin' marked has connected.
+conversation-flush de 26 mensajes.
+Model User::openRoom register roomId 'id-mariowise' successfully.
+Model User::updateRoom Update on state for user 'id-admin' and room 'id-mariowise' now is 'min'.
+Model User::updateRoom Update on state for user 'id-admin' and room 'id-mariowise' now is 'max'.
+Model User::updateRoom Update on state for user 'id-admin' and room 'id-mariowise' now is 'min'.
+Model User::updateRoom Update on state for user 'id-admin' and room 'id-mariowise' now is 'max'.
+Handler Index::disconnect User 'id-admin' marked has disconnected.
+Handler Index::disconnect User 'id-mariowise' marked has disconnected.
