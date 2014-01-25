@@ -16,11 +16,19 @@ module.exports = function (_io, _socketsById) {
 	socketsById = _socketsById
 
 	this.openRoom = function (socket, roomId) {
-		User.openRoom(socket.lid, roomId)
+		User.openRoom(socket.lid, roomId, function (err, neo) {
+			_.each(socketsById[socket.lid].socketList, function (sock) {
+				sock.emit('open-tabs', neo.openRooms)
+			})
+		})
 	}
 
 	this.closeRoom = function (socket, roomId) {
-		User.closeRoom(socket.lid, roomId)
+		User.closeRoom(socket.lid, roomId, function (err, neo) {
+			_.each(socketsById[socket.lid].socketList, function (sock) {
+				sock.emit('close-tab', roomId)
+			})
+		})
 	}
 
 	this.updateRoom = function (socket, room) {

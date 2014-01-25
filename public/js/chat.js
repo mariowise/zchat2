@@ -68,7 +68,7 @@ chatWindow.prototype.create = function(holder) {
 	self.setDNDHandlers(newOne);
 	
 	if(!this.thereIsSpace($(holder))) {
-		console.log("Eliminando " + $(holder).children().first().attr('name'))
+		// console.log("Eliminando " + $(holder).children().first().attr('name'))
 		$(holder).children().first().find('.fa-times').click()
 	}
 	$(holder).prepend(newOne);
@@ -452,6 +452,10 @@ function zchat(_id, _username, _secret) {
 	socket.on('open-tab', function (data) {
 		$('#chat-friends .list > [fid="'+ data +'"]').click();
 	});
+	socket.on('close-tab', function (roomId) {
+		$('#chat-bar > [name="'+ roomId +'"]').remove()
+		delete chatWindow.prototype.barlist[roomId]
+	})
 	socket.on('update-chatWindow', function (chunk) {
 		var domObj = $('#chat-bar [name="'+ chunk.oldId +'"]')
 		$(domObj).attr('name', chunk.newId)

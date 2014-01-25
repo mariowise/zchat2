@@ -75,7 +75,7 @@ userSchema.statics = {
 			var ix = indexOf(roomId, neo.openRooms)
 			if(ix != -1) neo.openRooms.splice(ix, 1)
 			else {
-				console.log("* ERROR: Model User::closeRoom can't find the room '"+ roomId +"' on the user '"+ userId +"'.")
+				console.log("Model User::closeRoom can't find the room '"+ roomId +"' on the user '"+ userId +"', maybe there was allready closed.")
 				console.log(neo.openRooms)
 				return (next) ? next(err, neo) : undefined
 			}
