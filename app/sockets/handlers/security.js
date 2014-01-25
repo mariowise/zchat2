@@ -26,7 +26,8 @@ module.exports = function (_io, _socketsById) {
 			return true
 		else {
 			console.log("* REJECTED: Security::securityCheck The user '"+ chunk.id +"' has tried to access with wgrong credentials. Possible cracking attempt detected.")
-			// console.log(decData)
+			console.log(chunk)
+			console.log(decData)
 			return false
 		}
 	}
@@ -40,15 +41,17 @@ module.exports = function (_io, _socketsById) {
 			if(err) return;
 			
 			// Sockets push
-			if(socketsById[chunk.id] == undefined) {
+			if(socketsById[chunk.id] == undefined)
 				socketsById[chunk.id] = { socketList: [] };
-				console.log("Handler Security::login User '"+ chunk.username +"' marked has connected.")
-			}
+			
 			socketsById[chunk.id].socketList.push(socket);
 			socket.broadcast.emit('user-update', { id: chunk.id, username: chunk.username, state: 'online' });
 			socket.lid 		= 	chunk.id;
 			socket.username = 	chunk.username;
 			socket.offset 	= 	socketsById[chunk.id].socketList.length-1;
+			console.log("Handler Security::login User '"+ chunk.username +"' marked has connected.")
+			// console.log(socketsById[chunk.id])
+
 			
 			// Bring data to session
 			User.find({}, function(err, docs) {

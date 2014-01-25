@@ -118,48 +118,53 @@ chatWindow.prototype.beginAlert = function() {
 chatWindow.prototype.setDNDHandlers = function (elem) {
 	var self = this;
 
-	// $(elem).bind('drop', function (evnt) {
-	// 	var piggy = DND_Piggy.get('piggy')
-	// 	  , userList = $(this).attr('name').split('$$')
-	// 	  , oldUserList = [].concat(userList)
-	// 	  , stringify = ''
+	$(elem).bind('drop', function (evnt) {
+		var piggy = DND_Piggy.get('piggy')
+		  , userList = $(this).attr('name').split('$$')
+		  , oldUserList = [].concat(userList)
+		  , stringify = ''
 		
-	// 	if(userList.indexOf(piggy.fid) != -1)
-	// 		return
-	// 	if(userList.indexOf(socket.lid) == -1)
-	// 		userList.push(socket.lid)
+		if(userList.indexOf(piggy.fid) != -1)
+			return
+		if(userList.indexOf(socket.lid) == -1)
+			userList.push(socket.lid)
 
-	// 	userList.push(piggy.fid)
-	// 	userList.sort()
-	// 	oldUserList.sort()
+		userList.push(piggy.fid)
+		userList.sort()
+		oldUserList.sort()
 		
-	// 	console.log('solicitando creación de nueva sala grupal'+
-	// 		$(this).attr('name') + ' <= ' + piggy.fid)		
+		console.log('solicitando creación de nueva sala grupal'+
+			$(this).attr('name') + ' <= ' + piggy.fid)		
 
-	// 	socket.emit('create-group', userList)
+		socket.emit('create-group', userList)
 
-	// 	$(this).attr('name', userList.join('$$'))
-	// 	$(this).children('.header').append(', ' + piggy.name)
+		$(this).attr('name', userList.join('$$'))
+		$(this).children('.header').append(', ' + piggy.name)
 
-	// 	// Actualizar las ventanas de los demás!
-	// 	socket.emit('update-chatWindow', {
-	// 		oldId: oldUserList.join('$$')
-	// 		, newId: userList.join('$$')
-	// 		, newHeader: $(this).children('.header').html()
-	// 	})
+		socket.emit('rename-tab', {
+			old: oldUserList.join("$$")
+			, new: userList.join("$$")
+		})
+
+		// Actualizar las ventanas de los demás!
+		socket.emit('update-chatWindow', {
+			oldId: oldUserList.join('$$')
+			, newId: userList.join('$$')
+			, newHeader: $(this).children('.header').html()
+		})
 		
-	// 	var buff = chatWindow.prototype.barlist[self.id]
-	// 	delete chatWindow.prototype.barlist[self.id]
-	// 	self.id = userList.join('$$')
-	// 	self.title = piggy.name
-	// 	chatWindow.prototype.barlist[self.id] = buff
+		var buff = chatWindow.prototype.barlist[self.id]
+		delete chatWindow.prototype.barlist[self.id]
+		self.id = userList.join('$$')
+		self.title = piggy.name
+		chatWindow.prototype.barlist[self.id] = buff
 
-	// 	console.log('Setteando objeto chatWindow')
-	// 	console.log(self)
-	// });
-	// $(elem).bind('dragover', function (evnt) {
-	// 	evnt.preventDefault()
-	// });
+		console.log('Setteando objeto chatWindow')
+		console.log(self)
+	});
+	$(elem).bind('dragover', function (evnt) {
+		evnt.preventDefault()
+	});
 }
 chatWindow.prototype.maxMini = function (dude, fast) {
 	var showSpeed = (!fast) ? [400, 600] : [0, 0]
@@ -245,7 +250,7 @@ function chatFriends(_domObj, _holdBar) {
 				$(list).children().hide()
 				query = query.toLowerCase()
 				query = query.replace("\0", "")
-				$(list).find('[lowername^="'+ query.toLowerCase() +'"]').show()
+				$(list).find('[lowername*="'+ query.toLowerCase() +'"]').show()
 			} else
 				$(list).children().show()
 		})
@@ -416,27 +421,27 @@ function zchat(_id, _username, _secret) {
 		// console.log(data)
 		var wind = data.peer
 		if(chatWindow.prototype.barlist[wind] != undefined)
-			$.each(data.conv, function (index, elem) {
-				chatWindow.prototype.barlist[wind].pushMessage({
+			for(var i = data.conv.length-1; i >= 0; i--) {
+				chatWindow.prototype.barlist[wind].pushMessage({ 
 					from: { 
-						id: elem.userId, 
-						username: elem.username 
+						id: data.conv[i].userId, 
+						username: data.conv[i].username 
 					}, 
-					msg: elem.message,
-					created: elem.created 
-				})
-			})
+					msg: data.conv[i].message,
+					created: data.conv[i].created 
+				});
+			}
 	});
 	socket.on('alerts-flush', function (data) {
-		console.log('alerts-flush');
-		console.log(data);
+		// console.log('alerts-flush');
+		// console.log(data);
 		chatFriends.prototype.pushAlert(data);
 	});
 	socket.on('open-tabs', function (data) {
 		// console.log('Recieving open-tabs')
 		// console.log(data)
 		if(data != null) 
-			$.each(data, function (key, value) {
+			$.each(data, function (key, value) {			
 				$('#chat-friends .list > [fid="'+ value.roomId +'"]').click()
 				if(value.size == 'min')
 					chatWindow.prototype.maxMini($('#chat-bar > [name="'+ value.roomId +'"]'), true)
@@ -446,10 +451,9 @@ function zchat(_id, _username, _secret) {
 		$('#chat-friends .list > [fid="'+ data +'"]').click();
 	});
 	socket.on('update-chatWindow', function (chunk) {
-		// var domObj = $('#chat-bar [name="'+ chunk.oldId +'"]')
-
-		// $(domObj).attr('name', chunk.newId)
-		// $(domObj).children('.header').html(chunk.newHeader)
+		var domObj = $('#chat-bar [name="'+ chunk.oldId +'"]')
+		$(domObj).attr('name', chunk.newId)
+		$(domObj).children('.header').html(chunk.newHeader)
 	})
 	socket.on('force-close-tab', function (tabId) {
 		if(chatWindow.prototype.barlist[tabId]) {

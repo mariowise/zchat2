@@ -31,6 +31,10 @@ module.exports = function (_io, _socketsById) {
 		User.setChatFriends(socket.lid, state)
 	}
 
+	this.renameTab = function (socket, chunk) {
+		User.renameRoom(socket.lid, chunk.old, chunk.new)
+	}
+
 	return this
 }
 

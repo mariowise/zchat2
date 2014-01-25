@@ -6,7 +6,6 @@ var mongoose        = require('mongoose')
 
 var io = require('socket.io').listen(config['socket.io'].port, { log: false })
   , User = mongoose.model('user')
-  , Alert = mongoose.model('alert')
   , socketsById = {}
   , _security = require('./handlers/security')(io, socketsById)
   , _message = require('./handlers/message')(io, socketsById)
@@ -60,6 +59,11 @@ io.sockets.on('connection', function(socket) {
 	})
 
 
+	socket.on('rename-tab', function (chunk) {
+		_user.renameTab(socket, chunk)
+	})
+
+
 	socket.on('update-chatFriends', function (state) {
 		_user.updateChatFriends(socket, state)
 	})
@@ -96,6 +100,13 @@ io.sockets.on('connection', function(socket) {
 	socket.on('disconnect', function() {
 		if(socketsById[socket.lid] != undefined) {
 			socketsById[socket.lid].socketList.splice(socket.offset, 1)
+			// Offset refresh
+			var i = 0
+			_.each(socketsById[socket.lid].socketList, function (elem) {
+				elem.offset = i
+				i++
+				// console.log("Setted index: " + elem.offset)	
+			})
 			if(socketsById[socket.lid].socketList.length == 0) {
 				User.update({ _id: socket.lid }, { $set: { state: 'offline' }}, null, function() {
 					delete socketsById[socket.lid]
@@ -103,6 +114,8 @@ io.sockets.on('connection', function(socket) {
 					socket.broadcast.emit('user-update', { id: socket.lid, username: socket.username, state: 'offline' })
 				})
 			}
+			// console.log("Handler Index::disconnect User '"+ socket.lid +"' call 'disconnect' event.")
+			// console.log(socketsById[socket.lid])
 		} else
 			console.log("* ERROR: Handler Index::disconnect User '"+ socket.lid +"' with no socket has trigger disconnect event (severe).")
 	})

@@ -1,0 +1,965 @@
+<?php echo $this->doctype();?>
+<?php require_once 'otros/Fecha.php';
+date_default_timezone_set('America/Santiago');
+$fecha = date('H:i:s'); 
+?>
+<?php $host = 'http://146.83.5.20'; ?>
+<?php $express_port = '3000'; ?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+       	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <?php echo $this->headTitle()."\n";?>
+
+        <link rel="stylesheet" type="text/css" href="/lib/bootstrap/css/bootstrap.min.css">
+        <link rel="stylesheet" type="text/css" href="/lib/bootstrap/css/bootstrap-responsive.min.css">
+        <link rel="stylesheet" type="text/css" href="/css/pcp-style.css">
+        <link rel="stylesheet/less" type="text/css" href="/css/styles.less">
+
+        <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+        <link rel="stylesheet" href="<?php echo $host; ?>:<?php echo $express_port; ?>/css/style.css">
+
+        <link rel="stylesheet" type="text/css" href="/css/chosen.css">
+        <script src="/js/jquery.min.js" type="text/javascript"></script>
+        <!--<script src="/js/jquery-1.9.1.js" type="text/javascript"></script>-->
+        <script src="/lib/bootstrap/js/bootstrap.js" type="text/javascript"></script>
+        <script src="/js/pcp-ajax.js" type="text/javascript"></script>
+        <script src="/lib/jqueryRut/jquery.Rut.js" type="text/javascript"></script>
+        <script src="/js/validaciones.js" type="text/javascript"></script>
+        <script src="/js/chosen.jquery.js" type="text/javascript"></script>
+        <script src="/js/chosen.proto.js" type="text/javascript"></script>
+        <script src="/js/jquery-ui-1.10.3.custom.js"></script>
+    </head>
+    <script type="text/javascript">var eventos = new Array();</script>
+    <?php
+
+		$auth = Zend_Auth::getInstance();
+		$id_persona=$auth->getIdentity()->id_persona;
+		$rol=$auth->getIdentity()->pcp_rol;
+		$rut=$auth->getIdentity()->rut;
+		$pass=$auth->getIdentity()->contrasegna;
+		$nombre=$auth->getIdentity()->nombre1;
+		$apellido=$auth->getIdentity()->apellido1;
+		$foto=$auth->getIdentity()->link_foto;
+		$email=$auth->getIdentity()->email;
+
+		$tableCC = new Model_CentroCosto();
+		$numcc = $tableCC->numCC($id_persona);
+		
+		/*echo ("Hola:".$nombre." Tu id es:".$id_persona." y tu rol:".$rol);
+		echo ("<br><br><br><br>");
+		echo utf8_encode($this->layout()->content);*/
+	?>
+
+    <body>
+    	<script type="text/javascript">
+    		var avisos;
+    		var cumpleanos;
+    		var serverTime = <?php echo time() * 1000; ?>; //this would come from the server
+			var localTime = +Date.now();
+			var timeDiff = serverTime - localTime;
+
+			$(document).ready(function() {
+			      startTime();
+			      revisa_notificaciones();
+			      var headers = document.getElementsByClassName('page-header');
+			      revisa_cumpleaños();
+			      for(var i = 0; i < headers.length; i++){
+			      	if(cumpleanos.length > 0){
+			      		headers[i].innerHTML += '<div id="home-icon"><a class="clearfix" href="/noticias"><img src="/img/home-icon.png"></a><a class="clearfix" href=""><img src="/img/gift.png"></a></div>';
+			      	}else{
+			      		headers[i].innerHTML += '<div id="home-icon"><a class="clearfix" href="/noticias"><img src="/img/home-icon.png"></a></div>';
+			      	}
+			      }
+			});
+
+
+
+			function startTime()
+			{
+
+			 var realtime = +Date.now() + timeDiff;
+			var today=new Date(realtime);
+			var h=today.getHours();
+			var m=today.getMinutes();
+			var s=today.getSeconds();
+
+
+
+			 
+
+
+			// add a zero in front of numbers<10
+			m=checkTime(m);
+			s=checkTime(s);
+			document.getElementById('hora_actual').innerHTML=h+":"+m+":"+s;
+			t=setTimeout(function(){startTime()},1000);
+			}
+
+			function checkTime(i)
+			{
+			if (i<10)
+			  {
+			  i="0" + i;
+			  }
+			return i;
+			}
+
+    		var eventos;
+
+    		$(document).ready(function(){
+    			get_notas();
+    			get_eventos();
+    			get_avisos();
+    			$('#calendar').datepicker({
+	        		inline: true,
+	        		firstDay: 1,
+	        		showOtherMonths: true,
+	        		dateFormat: 'dd/mm/yy',
+	        		dayNamesMin: ['D', 'L', 'M', 'Mi', 'J', 'V', 'S'],
+	        		monthNames: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
+	        		beforeShowDay: muestra_eventos,
+	        		onSelect: agregar_evento
+	    		});
+    		});
+
+    		function get_eventos(){
+    			$.ajax({ 
+		            type: "POST",
+		            url: "/agenda/index/geteventos",
+		            async: false,
+		            scriptCharset: "utf-8",
+		            success: function(html){
+		            	//alert(html);
+		            	eventos = JSON.parse(html);
+		            }
+		    	});
+    		}
+
+    		function muestra_eventos(date){
+    			var size = eventos.length;
+    			var currentDate = new Date($.datepicker.formatDate('yy/mm/dd', new Date()));
+
+    			if(currentDate.toString() == date.toString()){
+    				return [true, 'current', 'hoy'];
+    			}else{
+	    			for(var i = 0; i < size; i++){
+	    				var fecha = eventos[i]['fecha_evento'];
+	    				fecha = fecha.split(" ");
+	    				fecha = fecha[0].replace(/-/g,"/");
+	    				//alert(fecha);
+	    				var dt = new Date(fecha);
+
+	    				if(date.toString() == dt.toString()){
+	    					return [true, 'events', 'eventos'];
+	    				}
+	    			}
+	    		}
+    			return [true];
+    		}
+
+    		function agregar_evento(date){
+    			$.ajax({ 
+		            type: "POST",
+		            url: "/agenda/index/listeventos/format/html",
+		            scriptCharset: "utf-8",
+		            data: {
+		            	date: date,
+		            },
+		            success: function(html){
+		            	document.getElementById('eventos_dia').innerHTML = html;
+		            	var fecha = date.split("/");
+		            	$('#btn-nuevo-evento').attr('href', '/agenda/index/agregarevento/dia/'+fecha[0]+'/mes/'+fecha[1]+'/ano/'+fecha[2]);
+		            	$('#agrega_evento').modal('show');
+		            }
+		    	});
+    		}
+
+    		function crear_nota(){
+    			var radios = document.getElementsByName('color');
+    			var nota = document.getElementById('msg-note').value;
+    			var color;
+
+    			for(var i = 0; i < radios.length;i++){
+      				if(radios[i].checked){
+        				color = radios[i].value;
+        				break;
+      				}
+    			}
+
+    			$.ajax({ 
+		            type: "POST",
+		            url: "/index/addnota/format/html",
+		            scriptCharset: "utf-8",
+		            data: {
+		            	color: color,
+		            	nota: nota,
+		            },
+		            success: function(html){
+		            	document.getElementById('msg-note').value = null;
+		            	carga_mensaje();
+		            	$('#addnote').modal('hide');
+		            	get_notas();
+		            }
+		    	});
+  			}
+
+  			function get_notas(){
+  				$.ajax({ 
+		            type: "GET",
+		            url: "/index/getnotas/format/html",
+		            scriptCharset: "utf-8",
+		            success: function(html){
+		            	//carga_mensaje();
+		            	document.getElementById('containment-wrapper').innerHTML = html;
+
+		            	var drags = document.getElementsByClassName('draggable');
+
+		            	for(var i=0;i < drags.length; i++){
+		            		var id = drags[i].id.split("-");
+		            		var id_note = id[1];
+		            		$('#draggable-'+id_note).draggable({ containment: "#containment-wrapper", scroll: false , 
+
+						    // Find position where image is dropped.
+						    stop: function(event, ui) {
+
+						    	var nota_actual = $(this).attr('id');
+						    	nota_actual = nota_actual.split("-");
+						    	nota_actual = nota_actual[1];
+						    	// Show dropped position.
+						    	var Stoppos = $(this).position();
+								var model = { 
+									id: nota_actual,
+						            left: Stoppos.left,
+									top: Stoppos.top,
+						             };
+
+									$.ajax({
+									  url: "/index/movenota/format/html",
+									  type: "post",
+									  data: model,
+									  success: function(data){
+										  //$('.success_msg').show().fadeIn(2000).fadeOut(4000);
+									  },
+									  error:function(){
+										  alert('error is saving');
+									  }   
+									});
+						    }
+							});
+		            	}
+		            }
+		    	});
+  			}
+
+  			function delete_nota(nota){
+  				if(confirm("¿Está seguro que desea eliminar la nota seleccionada?")){
+	  				$.ajax({ 
+			            type: "POST",
+			            url: "/index/delnota/format/html",
+			            scriptCharset: "utf-8",
+			            data: {
+			            	nota: nota,
+			            },
+			            success: function(html){
+			            	get_notas();
+			            	carga_mensaje();
+			            }
+			    	});
+  				}
+  			}
+
+  			function carga_mensaje(){
+  				$.ajax({
+			        type: "POST",
+			        url: "/index/flash/format/html",
+			        scriptCharset: "utf-8",
+			        success: function(html){
+			        	document.getElementById('mensaje').innerHTML = html;
+			        }
+			    });
+  			}
+
+  			function modifica_nota(id){
+  				var mensaje = document.getElementById('nota_'+id).value;
+
+  				$.ajax({ 
+		            type: "POST",
+		            url: "/index/updatenota/format/html",
+		            scriptCharset: "utf-8",
+		            async: false,
+		            data: {
+		            	nota: id,
+		            	mensaje: mensaje,
+		            },
+		            success: function(html){
+		            	carga_mensaje();
+		            	//get_notas();
+		            }
+		    	});
+  			}
+
+  			function get_avisos(){
+  				$.ajax({ 
+		            type: "POST",
+		            url: "/agenda/index/getavisos/format/html",
+		            async: false,
+		            scriptCharset: "utf-8",
+		            success: function(html){
+		            	avisos = JSON.parse(html);
+		            	revisa_avisos();
+		            }
+		    	});
+  			}
+
+  			function revisa_avisos(){
+  				var date = new Date();
+  				var currentDate = new Date(date.getFullYear()+"/"+(date.getMonth()+1)+"/"+date.getDate()+" "+date.getHours()+":"+date.getMinutes()+":00");
+  				for(var i=0; i < avisos.length; i++){
+  					var fecha = avisos[i]['fecha_aviso'].split(" ");
+  					fecha[0] = fecha[0].replace(/-/g,"/");
+  					fecha = fecha[0]+" "+fecha[1];
+  					fecha = new Date(fecha);
+  					//alert(fecha.toString()+" "+currentDate.toString());
+  					if(fecha.toString() == currentDate.toString()){
+  						var titulo = "Aviso PCP: "+avisos[i]['titulo_evento'];
+  						var descripcion = "<p><b>Aviso de evento generado por el Portal Corporativo de Personas. A continuación se indican los detalles del evento correspondiente:</b></p><br><ul><li>Nombre del evento: "+avisos[i]['titulo_evento']+"</li><li>Fecha de inicio: "+avisos[i]['fecha_evento']+"</li><li>Fecha término: "+avisos[i]['fecha_termino']+"</li><li>Descripción: "+avisos[i]['descripcion_evento']+"</li></ul><br>";
+  						if(avisos[i]['id_pcp_config_tipo_aviso'] == 2){
+	  						$('#aviso').modal({
+		    					backdrop: 'static'
+		    				});
+	  						document.getElementById('title-evento').innerHTML = '<h4 class="modal-title" id="myModalLabel">'+titulo+'</h4>';
+	  						document.getElementById('body-aviso').innerHTML = descripcion;
+	  						PlaySound(2);
+	  					}else{
+	  						$.ajax({ 
+					            type: "POST",
+					            url: "/agenda/index/avisocorreo/format/html",
+					            async: false,
+					            scriptCharset: "utf-8",
+					            data: {
+					            	titulo: titulo,
+					            	descripcion: descripcion,
+					            	mail: "<?=$email?>",
+					            },
+					            success: function(html){
+					            }
+					    	});
+	  					}
+  					}
+  				}
+  				setTimeout(function(){revisa_avisos()},60000);
+  			}
+
+  			function PlaySound(id) {
+			  var thissound=document.getElementById("beep"+id);
+			  thissound.play();
+			}
+
+			function pause_aviso(id){
+				var thissound=document.getElementById("beep"+id);
+			  	thissound.pause();
+			  	$('#aviso').modal('hide');
+			}
+
+			function ajax_notificaciones(){
+				$.ajax({ 
+		            type: "POST",
+		            url: "/index/getnotificaciones/format/html",
+		            async: true,
+		            scriptCharset: "utf-8",
+		            success: function(html){
+		            	var notificaciones = JSON.parse(html);
+		            	if(notificaciones['noticias'] > 0){
+		            		$('#not_noticias').css("opacity", "1");
+		            		$('#not_noticias').text(notificaciones['noticias']);
+		            	}
+		            	if(notificaciones['reuniones'] > 0){
+		            		$('#not_reuniones').css("opacity", "1");
+		            		$('#not_reuniones').text(notificaciones['reuniones']);
+		            	}
+		            	if(notificaciones['productos'] > 0){
+		            		$('#not_productos').css("opacity", "1");
+		            		$('#not_productos').text(notificaciones['productos']);
+		            	}
+		            	if(notificaciones['pedidos'] > 0){
+		            		$('#not_pedidos').css("opacity", "1");
+		            		$('#not_pedidos').text(notificaciones['pedidos']);
+		            	}
+		            	if(notificaciones['producto-adm'] > 0){
+		            		$('#not_cc').css("opacity", "1");
+		            		$('#not_cc').text(notificaciones['producto-adm']);
+		            	}
+		            }
+		    	});
+			}
+
+			function revisa_notificaciones(){
+				ajax_notificaciones();
+				setTimeout(function(){ajax_notificaciones()},60000);
+			}
+
+			function revisa_cumpleaños(){
+				$.ajax({ 
+		            type: "POST",
+		            url: "/index/getcumpleanos/format/html",
+		            async: false,
+		            scriptCharset: "utf-8",
+		            success: function(html){
+		            	cumpleanos = JSON.parse(html);
+		            }
+		    	});
+			}
+		</script>
+		<audio id="beep2" src="/sounds/alarma.mp3" loop> </audio>
+    	<style type="text/css">
+    	#informacion{
+    		float: right;
+    		margin-top: 30px;
+    		margin-right: 30px;
+    		font-weight: 500;
+    		text-align: right;
+    		color: rgb(90, 90, 90);
+    	}
+    	.imp-dir{
+    		margin-top: 10px;
+    	}
+
+    	.imp-dir > a{
+    		color: white!important;
+    		background-color: #d9534f;
+    		border-radius: 5px;
+    	}
+
+    	.note-1 textarea{
+	  		width:100px;  height: 100px; background:#FDFB8C; border: 1px solid #DEDC65; margin: 0 auto;width: 100px;
+	  	}
+	  
+	  
+	  	.note-2 textarea {
+	  		width:100px;  height: 100px; background:#A5F88B; border: 1px solid #98E775; margin: 0 auto;width: 100px;
+	  	}
+	  
+	  	.note-3 textarea {
+	  		width:100px;  height: 100px; background:#A6E3FC; border: 1px solid #75C5E7;margin: 0 auto;width: 100px;
+	  	}
+	  
+	  	.draggable { width: 168px; height: 192px; padding: 0.5em; border:0; padding-top:10px; pointer-events: all; }
+	  	.draggable textarea{ width: 150px; height: 150px; padding: 0.5em; box-shadow: 7px 7px 5px 0px rgba(50, 50, 50, 0.75); }
+	  	.draggable { text-align:center }
+	  	.draggable img.pin{
+	  		margin-left: 65px;
+			margin-top: -20px;
+			position: absolute;
+			cursor:move;
+		}
+	  	.draggable img.delete{
+	  		margin-left: 0;
+			margin-top: -10px;
+			position: absolute;
+			cursor: pointer;
+		}
+		.draggable .delete {
+			position: absolute;
+			cursor: pointer;
+			top: 12px;
+			right: 10px;
+			/*background:#A5F88B;*/
+			padding-right: 5px;
+			font-size: 12px;
+			color: gray;
+		}
+		#containment-wrapper{
+			pointer-events: none;
+		}
+		.ui-datepicker table{
+			padding: 0 5px;
+		}
+		.ui-datepicker,
+		.ui-datepicker table,
+		.ui-datepicker tr,
+		.ui-datepicker td,
+		.ui-datepicker th {
+		    margin: 0;
+		    padding: 0;
+		    border: none;
+		    border-spacing: 0;
+		    width: 100%;
+		}
+		.ui-datepicker {
+		    display: none;
+		    width: auto;
+		    /*padding: 5px;*/
+		    cursor: default;
+		    margin-bottom: 10px;
+		 
+		    text-transform: uppercase;
+		    font-family: Tahoma;
+		    font-size: 12px;
+		 
+		    /*-webkit-border-radius: 3px;
+		    -moz-border-radius: 3px;
+		    border-radius: 3px;
+		 
+		    -webkit-box-shadow: 0px 1px 1px rgba(255,255,255, .1), inset 0px 1px 1px rgb(0,0,0);
+		    -moz-box-shadow: 0px 1px 1px rgba(255,255,255, .1), inset 0px 1px 1px rgb(0,0,0);
+		    box-shadow: 0px 1px 1px rgba(255,255,255, .1), inset 0px 1px 1px rgb(0,0,0);*/
+		}
+		.ui-datepicker-header {
+		    position: relative;
+		    padding: 10px 0px;
+		    border: 1px solid #2880d3;
+		    background: #4893DA;
+		    border-radius: 5px 5px 0px 0px;
+		}
+		 
+		.ui-datepicker-title { text-align: center; }
+		 
+		.ui-datepicker-month {
+		    position: relative;
+		    padding-right: 1px;
+		    color: whitesmoke;
+
+		}
+		 
+		.ui-datepicker-year {
+		    padding-left: 1px;
+		    color: whitesmoke;
+		}
+
+		.glyphicon-arrow-left{
+			color: white;
+		}
+
+		/*.ui-datepicker-month:before {
+		    display: block;
+		    position: absolute;
+		    top: 5px;
+		    right: 0;
+		    width: 5px;
+		    height: 5px;
+		    content: '';
+		 
+		    background: #a5cd4e;
+		    background: -moz-linear-gradient(top, #a5cd4e 0%, #6b8f1a 100%);
+		    background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#a5cd4e), color-stop(100%,#6b8f1a));
+		    background: -webkit-linear-gradient(top, #a5cd4e 0%,#6b8f1a 100%);
+		    background: -o-linear-gradient(top, #a5cd4e 0%,#6b8f1a 100%);
+		    background: -ms-linear-gradient(top, #a5cd4e 0%,#6b8f1a 100%);
+		    background: linear-gradient(top, #a5cd4e 0%,#6b8f1a 100%);
+		 
+		    -webkit-border-radius: 5px;
+		    -moz-border-radius: 5px;
+		    border-radius: 5px;
+		}*/
+		.ui-datepicker-prev,
+		.ui-datepicker-next {
+		    position: absolute;
+		    top: 8px;
+		    padding: 5px;
+		    cursor: pointer;
+		}
+		 
+		.ui-datepicker-prev {
+		    left: 10px;
+		}
+		 
+		.ui-datepicker-next {
+		    right: 10px;
+		}
+		 
+		.ui-datepicker-prev span,
+		.ui-datepicker-next span{
+		    display: block;
+		    width: 10px;
+		    height: 10px;
+		    text-indent: -9999px;
+		 
+		    background-image: url(/img/arrows.png);
+		}
+		 
+		.ui-datepicker-prev span { background-position: 0px 0px; }
+		 
+		.ui-datepicker-next span { background-position: 10px 0px; }
+		 
+		.ui-datepicker-calendar td, .ui-datepicker-calendar th {
+		    padding: 0 0px;
+		 
+		    text-align: center;
+		    line-height: 20px;
+		}
+		 
+		.ui-datepicker-calendar .ui-state-default {
+		    display: block;
+		    width: 27px;
+		    outline: none;
+		 
+		    text-decoration: none;
+		    color: #565656;
+		 
+		    border: 1px solid transparent;
+		}
+
+		.events .ui-state-default{
+			color: white;
+			border: 1px solid white;
+			background: #71b5e2;
+			opacity: 0.8;
+		}
+
+		/*.ui-datepicker-calendar .ui-state-active {
+		    color: white;
+		    border: 1px solid #2880d3;
+		    background: #4893DA;
+		    opacity: 1;
+		}*/
+		 
+		.ui-datepicker-other-month .ui-state-default { color: #a8a8a8; }
+
+		.datos-evento{
+			float: left;
+		}
+
+		.hora-evento{
+			float: right;
+		}
+
+		.current .ui-state-default{
+			color: white;
+		    border: 1px solid #2880d3;
+		    background: #4893DA;
+		    opacity: 1;
+		}
+
+		#eventos{
+			list-style: none;
+			padding: 0px 10px;
+		}
+
+		#btn-detalle{
+			float: right;
+		}
+
+    	</style>
+    	<?php
+    		$tableAmbiente = new Model_Ambiente();
+    		$tableAmbiente2 = new Administrador_Model_Ambiente(); 
+    		$logoDII = $tableAmbiente2->get_ambiente(4);
+    		$logoPCP = $tableAmbiente2->get_ambiente(3);
+    		$logoFCFM = $tableAmbiente2->get_ambiente(20);
+    		$link_base = $tableAmbiente->get_valor(11);
+    	?>
+    	<div class="header clearfix">
+    		<img id="logo-dii" src="<?=$logoDII['ruta_archivo']?>">
+			<h2>Portal Corporativo de Personas</h2>
+			<li id="hora" >
+                    <a>
+	                    <div>
+	                     	<span class="glyphicon glyphicon-time"></span>
+	                     	<hora id="hora_actual"><?=$fecha?></hora>
+	                    </div>
+                    </a>
+                </li>
+			<img id="logo-pcp" src="<?=$logoPCP['ruta_archivo']?>">
+		</div>
+		<div class="col-cen clearfix">
+			<div class="col-iz">
+				<div class="clearfix">
+					<div class="modulo">
+						<a id="respaldo" href="/respaldos"><span></span><span class="name-modulo" id="name-respaldo">Respaldo de datos</span></a>
+					</div>
+					<div class="modulo">
+						<a id="printer" href="/impresion"><span></span><span class="name-modulo" id="name-printer">Impresi&oacute;n dirigida</span></a>
+					</div>
+				</div>
+				<div class="clearfix">
+					<div class="modulo">
+						<a id="noticia" href="/noticias/index/misnoticias"><span></span><span class="name-modulo" id="name-noticia">Mis noticias</span><span id="not_noticias" class="notificaciones">1</span></a>
+					</div>
+					<div class="modulo">
+						<a id="reuniones" href="/reuniones/index/reuniones"><span></span><span class="name-modulo" id="name-reuniones">Coordinar reuniones</span><span id="not_reuniones" class="notificaciones"></span></a>
+					</div>
+				</div>
+				<div class="clearfix">
+					<div class="modulo">
+						<a id="cafe" href="/pedidos/carrocompra/agregarproducto/proveedor/1"><span></span><span class="name-modulo" id="name-cafe">Caf&eacute; Expr&eacute;s</span><span id="not_cafe" class="notificaciones"></span></a>
+					</div>
+					<div class="modulo">
+						<a id="printer2" href="/pedidos/carrocompra/agregarproducto/proveedor/2"><span></span><span class="name-modulo" id="name-printer2">Impresi&oacute;n Expr&eacute;s</span><span id="not_fotocopia" class="notificaciones">1</span></a>
+					</div>
+				</div>
+				<div class="clearfix">
+					<div class="modulo">
+						<a id="notas" data-toggle="modal" data-target="#addnote"><span></span><span class="name-modulo" id="name-notas">Mis notas</span></a>
+					</div>
+					<div class="modulo">
+						<a id="foro" href="/foro"><span></span><span class="name-modulo" id="name-foro">Foro</span></a>
+					</div>
+				</div>
+				<?php if($rol != 4): ?>
+				<div id="title-adm">Administraci&oacute;n</div>
+					<div class="clearfix">
+						<?php if($rol == 2): ?>
+							<div class="modulo">
+								<a id="noticias-adm" href="/editor/index/administrarnoticias"><span></span><span class="name-modulo" id="name-noticias-adm">Administrar noticias</span><span id="not_noticias" class="notificaciones"></span></a>
+							</div>
+						<?php endif; ?>
+						<?php if($rol == 1): ?>
+							<div class="modulo">
+								<a id="usuarios-adm" href="/administrador/usuario/"><span></span><span class="name-modulo" id="name-usuarios-adm">Administrar usuarios</span></a>
+							</div>
+						<?php endif; ?>
+						<?php if($rol == 1): ?>
+							<div class="modulo">
+								<a id="productos-adm" href="/administrador/notificacion/productos"><span></span><span class="name-modulo" id="name-productos-adm">Administrar productos</span><span id="not_productos" class="notificaciones"></span></a>
+							</div>
+						<?php endif; ?>
+					</div>
+					<div class="clearfix">
+						<?php if($numcc > 0): ?>
+							<div class="modulo">
+								<a id="cc-adm" href="/usuario/notificacion"><span></span><span class="name-modulo" id="name-cc-adm">Administrar centros de costo</span><span id="not_cc" class="notificaciones"></span></a>
+							</div>
+						<?php endif; ?>
+						<?php
+							$rolUsuarioTable = new Model_RolUsuario();
+							$proveedor = $rolUsuarioTable->isProveedor();
+							if($proveedor == 1):
+						?>
+							<div class="modulo">
+								<a id="proveedor1-adm" href="/proveedor/index/index/proveedor/<?=$proveedor?>"><span></span><span class="name-modulo" id="name-proveedor1-adm">Administrar pedidos</span><span id="not_pedidos" class="notificaciones"></span></a>
+							</div>
+						<?php endif; ?>
+						<?php if($proveedor == 2): ?>
+							<div class="modulo">
+								<a id="proveedor2-adm" href="/proveedor/index/index/proveedor/<?=$proveedor?>"><span></span><span class="name-modulo" id="name-proveedor2-adm">Administrar pedidos</span><span id="not_pedidos" class="notificaciones"></span></a>
+							</div>
+						<?php endif; ?>
+						<?php if($rol == 1): ?>
+							<div class="modulo">
+								<a id="entorno-adm" href="/administrador/ambiente/list"><span></span><span class="name-modulo" id="name-entorno-adm">Administrar entorno</span></a>
+							</div>
+						<?php endif; ?>
+					</div>
+				<?php endif; ?>
+			</div>
+			<div class="content">
+					<?php 
+						echo $this->navigation()->breadcrumbs()->setPartial(array('prueba.phtml', 'default'))->setLinkLast(true);
+                    ?>
+				<div id="mensajes">
+				<?php include("flash/Inicio.php"); ?>
+				</div>
+				<?php echo $this->layout()->content; ?>
+			</div>
+			<div class="col-der">
+				<div class="clearfix" id="cuenta-usu">
+					<img id="foto-usu" src="<?=$link_base?>chica/<?php echo $foto ?>">
+					<div id="info-usu">
+						<?php if($rol == 1): ?>
+							<a href="/administrador/usuario/datosusuario/id_persona/<?php echo $id_persona; ?>" id="cuenta"><?php echo $nombre.' '.$apellido; ?></a><br>
+						<?php else: ?>
+							<a href="/usuario/index/datosusuario/id_persona/<?php echo $id_persona; ?>" id="cuenta"><?php echo $nombre.' '.$apellido; ?></a><br>
+						<?php endif; ?>
+						<!--<a href='/default/index/logout'><span class="glyphicon glyphicon-remove"></span></a>-->
+						<a href='/default/index/logout'>Cerrar sesión</a>
+					</div>
+				</div>
+				<div id="calendar"></div>
+				<div class="panel panel-danger">
+				  	<div class="panel-heading">
+				    	<h3 class="panel-title">Avisos</h3>
+				  	</div>
+				  	<div class="panel-body">
+				  		<?php $avisosTable = new Model_Avisos(); ?>
+				  		<?php 
+				  			$post = $avisosTable->get_avisos('postulacion');
+				  			if($post >= 0):
+				  		?>
+				  			<p><a href="http://www.coordinadoracademico.cl/publico/index/loginexterno/rut/<?=$rut?>/clave/<?=$pass?>" target="_blank">Postulaciones CPA (<?=$post?>)</a></p>
+				  		<?php 
+				  			endif;
+				  			$fact = $avisosTable->get_avisos('facturacion');
+				  			if($fact >= 0):
+				  		?>
+				  			<p><a href="http://www.coordinadoracademico.cl/publico/index/loginexterno/rut/<?=$rut?>/clave/<?=$pass?>" target="_blank">Facturaciones CPA (<?=$fact?>)</a></p>
+				  		<?php
+				  			endif;
+				  			$asignar = $avisosTable->get_avisos('asignar_ejecutivo');
+				  			if($asignar >= 0):
+				  		?>
+				  			<p><a href="http://www.coordinadoracademico.cl/publico/index/loginexterno/rut/<?=$rut?>/clave/<?=$pass?>" target="_blank">Asignar ejecutivos CPA (<?=$asignar?>)</a></p>
+				  		<?php
+				  			endif;
+				  			$comisiones = $avisosTable->get_avisos('comisiones_pendientes');
+				  			if($comisiones >= 0):
+				  		?>
+				  			<p><a href="http://www.coordinadoracademico.cl/publico/index/loginexterno/rut/<?=$rut?>/clave/<?=$pass?>" target="_blank">Comisiones pendientes CPA (<?=$comisiones?>)</a></p>
+				  		<?php
+				  			endif;
+				  			$compra = $avisosTable->get_avisos('compra');
+				  			if($compra >= 0):
+				  		?>
+				  			<p><a href="http://www.coordinadoracademico.cl/publico/index/loginexterno/rut/<?=$rut?>/clave/<?=$pass?>" target="_blank">Compras CPA (<?=$compra?>)</a></p>
+				  		<?php
+				  			endif;
+				  			$pago = $avisosTable->get_avisos('pago');
+				  			if($comisiones >= 0):
+				  		?>
+				  			<p><a href="http://www.coordinadoracademico.cl/publico/index/loginexterno/rut/<?=$rut?>/clave/<?=$pass?>" target="_blank">Pagos CPA (<?=$pago?>)</a></p>
+				  		<?php
+				  			endif;
+				  			$sol_prov = $avisosTable->get_avisos('solicitud_proveedores');
+				  			if($sol_prov >= 0):
+				  		?>
+				  			<p><a href="http://www.coordinadoracademico.cl/publico/index/loginexterno/rut/<?=$rut?>/clave/<?=$pass?>" target="_blank">Solicitud proveedores CPA (<?=$sol_prov?>)</a></p>
+				  		<?php
+				  			endif;
+				  			$sol_fondo = $avisosTable->get_avisos('solicitud_fondo');
+				  			if($sol_fondo >= 0):
+				  		?>
+				  			<p><a href="http://www.coordinadoracademico.cl/publico/index/loginexterno/rut/<?=$rut?>/clave/<?=$pass?>" target="_blank">Solicitud fondo CPA (<?=$sol_fondo?>)</a></p>
+				  		<?php
+				  			endif;
+				  			$licitacion = $avisosTable->get_avisos('licitacion');
+				  			if($licitacion >= 0):
+				  		?>
+				  			<p><a href="http://www.coordinadoracademico.cl/publico/index/loginexterno/rut/<?=$rut?>/clave/<?=$pass?>" target="_blank">Licitaciones CPA (<?=$licitacion?>)</a></p>
+				  		<?php
+				  			endif;
+				  			$bol_garantia = $avisosTable->get_avisos('boleta_garantia');
+				  			if($bol_garantia >= 0):
+				  		?>
+				  			<p><a href="http://www.coordinadoracademico.cl/publico/index/loginexterno/rut/<?=$rut?>/clave/<?=$pass?>" target="_blank">Boleta Garantía CPA (<?=$bol_garantia?>)</a></p>
+				  		<?php
+				  			endif;
+				  			$trato = $avisosTable->get_avisos('trato_directo');
+				  			if($trato >= 0):
+				  		?>
+				  			<p><a href="http://www.coordinadoracademico.cl/publico/index/loginexterno/rut/<?=$rut?>/clave/<?=$pass?>" target="_blank">Trato directo CPA (<?=$trato?>)</a></p>
+				  		<?php
+				  			endif;
+				  			$honorarios = $avisosTable->get_avisos('solicitud_honorarios');
+				  			if($comisiones >= 0):
+				  		?>
+				  			<p><a href="http://www.coordinadoracademico.cl/publico/index/loginexterno/rut/<?=$rut?>/clave/<?=$pass?>" target="_blank">Solicitud honorarios CPA (<?=$honorarios?>)</a></p>
+				  		<?php
+				  			endif;
+				  			$gest_honorarios = $avisosTable->get_avisos('gestion_honorarios');
+				  			if($gest_honorarios >= 0):
+				  		?>
+				  			<p><a href="http://www.coordinadoracademico.cl/publico/index/loginexterno/rut/<?=$rut?>/clave/<?=$pass?>" target="_blank">Gestion honorarios CPA (<?=$gest_honorarios?>)</a></p>
+				  		<?php endif; ?>
+				  		<p><a href="http://www.u-campus.cl" target="_blank">U-Campus</a></p>
+				  		<p><a href="http://www.u-cursos.cl" target="_blank">U-Cursos</a></p>
+				  		<p><a href="http://www.sba.dii.uchile.cl/publico/index/loginexterno/rut/<?=$rut?>/clave/<?=$pass?>/" target="_blank">SBA</a></p>
+				  	</div>
+				</div>
+
+			</div>
+		</div>
+
+		<div class="modal fade" id="addnote" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+			    <div class="modal-content">
+			      	<div class="modal-header">
+			        	<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+			        	<h4 class="modal-title" id="myModalLabel">Nueva nota</h4>
+			      	</div>
+			      	<div class="modal-body">
+			        	<form action="dashboard.php" method="post">
+			          		<textarea name="note" id="msg-note" style="width:100%; max-width:100%; height:150px; max-height:150px;"></textarea>
+			          		<br/>
+			          		<b> Seleccione el color de la nota </b>
+			          		<br/>
+			          		<table style="width:100%;text-align: center;">
+			            		<tr>
+			            			<td> <input type="radio" name="color" value="1" checked /> </td>
+			            			<td> <input type="radio" name="color" value="2" />  </td>
+			            			<td> <input type="radio" name="color" value="3" />  </td>
+			            		</tr>
+
+			            		<tr>
+			            			<td> <div style="width:100px;  height: 100px; background:#FDFB8C; border: 1px solid #DEDC65; margin: 0 auto;width: 100px;"></div> </td>
+			            			<td> <div style="width:100px;  height: 100px; background:#A5F88B; border: 1px solid #98E775; margin: 0 auto;width: 100px;"></div> </td>
+			            			<td> <div style="width:100px;  height: 100px; background:#A6E3FC; border: 1px solid #75C5E7;margin: 0 auto;width: 100px;"></div> </td>
+			            		</tr>
+
+			          		</table>
+			        	</form>
+			      	</div>
+			      	<div class="modal-footer">
+			      		<button type="button" class="btn btn-primary" onclick="crear_nota();">Crear nota</button>
+			      		<button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
+			      	</div>
+			    </div><!-- /.modal-content -->
+			</div><!-- /.modal-dialog -->
+		</div><!-- /.modal -->
+
+		<div class="modal fade" id="agrega_evento" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+			    <div class="modal-content">
+			      	<div class="modal-header">
+			        	<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+			        	<h4 class="modal-title" id="myModalLabel">Eventos</h4>
+			      	</div>
+			      	<div id="eventos_dia" class="modal-body"></div>
+			      	<div class="modal-footer">
+			      		<a href="/agenda/index/agregarevento" id="btn-nuevo-evento" class="btn btn-primary">Nuevo evento</a>
+			      		<button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
+			      	</div>
+			    </div><!-- /.modal-content -->
+			</div><!-- /.modal-dialog -->
+		</div><!-- /.modal -->
+
+		<div class="modal fade" id="aviso" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+			    <div class="modal-content">
+			      	<div class="modal-header" id="title-evento">
+			        	<h4 class="modal-title" id="myModalLabel">Aviso</h4>
+			      	</div>
+			      	<div class="modal-body" id="body-aviso">
+			        	Nuevo aviso
+			      	</div>
+			      	<div class="modal-footer">
+			      		<button type="button" class="btn btn-primary" onclick="pause_aviso(2);">Listo</button>
+			      	</div>
+			    </div><!-- /.modal-content -->
+			</div><!-- /.modal-dialog -->
+		</div><!-- /.modal -->
+
+		<div id="containment-wrapper" style="position: absolute; width: 100%; left: 0px; right: 0px; top: 0px; height: 100%;"></div>
+
+		<div id="chat-bar"></div>
+            <div id="chat-friends">
+                <div class="hider"><i class="fa-chevron-right"></i></div>
+                <div class="list"></div>
+            </div>
+            <script type="text/javascript" src="<?php echo $host; ?>:3100/socket.io/socket.io.js"></script>
+            <script type="text/javascript">var host = '<?php echo $host; ?>';</script>
+            <script type="text/javascript" src="<?php echo $host; ?>:<?php echo $express_port; ?>/js/chat.js"></script>
+            <script type="text/javascript">
+                // var cf = new chatFriends($('#chat-friends')[0], $('#chat-bar'));
+                zchat(
+                    'id-<?php echo $id_persona;?>',
+                    '<?php echo $nombre." ".$apellido;?>',
+                    '<?php
+                        $text = "zchat_secret$$" . "id-" . $id_persona;
+                        $pad = 16 - (strlen($text) % 16);
+                        $data = $text . str_repeat(chr($pad), $pad);
+                        echo bin2hex(mcrypt_encrypt(MCRYPT_RIJNDAEL_128, "abcdefghijklmnop", $data, MCRYPT_MODE_CBC, "0123456789123456"));
+                    ?>'
+                );
+            </script>
+
+		<div class="footer">
+			<img id="logo-fcfm" src="<?=$logoFCFM['ruta_archivo']?>">
+			<div id="informacion">
+				<p><?php echo $tableAmbiente2->get_pcp_valor(1); ?></p>
+				<p><?php echo $tableAmbiente2->get_pcp_valor(2); ?></p>
+			</div>
+		</div>
+	</body>
+</html>
+
+

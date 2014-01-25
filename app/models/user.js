@@ -9,8 +9,12 @@ var userSchema = new Schema({
 	secret		: 	String,
 	state		: 	String,
 	chatFriends : 	String,
-	maxRooms 	: 	[],
-	minRooms	: 	[]
+	openRooms 	: 	[new Schema({
+		roomId 	: 	String,
+		size 	: 	String,
+		name 	: 	String,
+		pos 	: 	Number
+	}, { _id: false })]
 });
 
 userSchema.statics = {
@@ -32,8 +36,9 @@ userSchema.statics = {
 						console.log(err)
 					}
 					if(neo.chatFriends == undefined) neo.chatFriends = 'closed'
-					if(neo.maxRooms == undefined) neo.maxRooms = []
-					if(neo.minRooms == undefined) neo.minRooms = []
+					if(neo.openRooms == undefined) neo.openRooms = []
+					// if(neo.maxRooms == undefined) neo.maxRooms = []
+					// if(neo.minRooms == undefined) neo.minRooms = []
 					neo.save()
 					if(next) next(err, neo)
 				})
@@ -48,8 +53,17 @@ userSchema.statics = {
 				console.log(err)
 				return (next) ? next(err, neo) : undefined
 			}
-			neo.maxRooms.push(roomId)
-			neo.maxRooms = _.uniq(neo.maxRooms)
+			neo.openRooms.push({
+				roomId: roomId,
+				size: 'max',
+				name: '',
+				pos: 0
+			})
+			neo.openRooms = _.uniq(neo.openRooms, false, function (el) {
+				return el.roomId == roomId
+			})
+			// neo.maxRooms.push(roomId)
+			// neo.maxRooms = _.uniq(neo.maxRooms)
 			neo.save()
 			console.log("Model User::openRoom register roomId '"+ roomId +"' successfully.")
 			if(next) next(err, neo)
@@ -63,8 +77,10 @@ userSchema.statics = {
 				console.log(err)
 				return (next) ? next(err, neo) : undefined
 			}
-			neo.maxRooms = _.without(neo.maxRooms, roomId)
-			neo.minRooms = _.without(neo.minRooms, roomId)
+			var ix = indexOf(roomId, neo.openRooms)
+			if(ix =! -1) neo.openRooms.splice(ix, 1)
+			// neo.maxRooms = _.without(neo.maxRooms, roomId)
+			// neo.minRooms = _.without(neo.minRooms, roomId)
 			neo.save()
 			console.log("Model User::closeRoom delete openRoom for user '"+ userId +"' and room '"+ roomId +"' successfully.")
 			if(next) next(err, neo)
@@ -78,14 +94,40 @@ userSchema.statics = {
 				console.log(err)
 				return (next) ? next(err, neo) : undefined
 			}
-			neo.maxRooms = _.without(neo.maxRooms, roomId)
-			neo.minRooms = _.without(neo.minRooms, roomId)
-			if(size == 'max')
-				neo.maxRooms.push(roomId)
-			else
-				neo.minRooms.push(roomId)
+			var ix = indexOf(roomId, neo.openRooms)
+			if(ix != -1) neo.openRooms[ix].size = size
+			// neo.maxRooms = _.without(neo.maxRooms, roomId)
+			// neo.minRooms = _.without(neo.minRooms, roomId)
+			// if(size == 'max')
+			// 	neo.maxRooms.push(roomId)
+			// else
+			// 	neo.minRooms.push(roomId)
 			console.log("Model User::updateRoom Update on state for user '"+ userId +"' and room '"+ roomId +"' now is '"+ size +"'.")
 			neo.save()
+			if(next) next(err, neo)
+		})
+	}
+
+	, renameRoom: function (userId, old, _new, next) {
+		this.findOne({ _id: userId }, function (err, neo) {
+			if(err) {
+				console.log("* ERROR: Model User::renameRoom can't locate the user '"+ roomId +"' for rename a room.")
+				console.log(err)
+				return (next) ? next(err, neo) : undefined
+			}
+			var ix = indexOf(old, neo.openRooms)
+			if(ix != -1) neo.openRooms[ix].roomId = _new
+			// var ix = neo.maxRooms.indexOf(old)
+			// var jx = neo.minRooms.indexOf(old)
+			// if(ix != -1 || jx != -1) {
+			// 	if(ix != -1) neo.maxRooms[ix] = _new
+			// 	if(jx != -1) neo.minRooms[jx] = _new
+			// 	console.log("Model User::renameRoom renaming '"+ old +"' by new room named '"+ _new +"'.")
+			// 	neo.save()
+			// } else {
+			// 	console.log("* ERROR: Model User::renameRoom can't find the room '"+ old +"' to rename it to '"+ _new +"'.")
+			// 	console.log(neo)
+			// }
 			if(next) next(err, neo)
 		})
 	}
@@ -95,7 +137,7 @@ userSchema.statics = {
 			if(err) {
 				console.log("* ERROR: Model User::buildRoomList can't locate the user '"+ userId +"' for building the openRoom list.")
 				console.log(err)
-				return (nex) ? next(err, neo) : undefined
+				return (next) ? next(err, neo) : undefined
 			}
 			var list = []
 			_.each(neo.maxRooms, function (key, value) {
@@ -121,7 +163,15 @@ userSchema.statics = {
 			}
 		)
 	}
-
+	
 };
+
+function indexOf(roomId, list) {
+	var res = -1
+	_.each(list, function (index, elem) {
+		if(elem.roomId == roomId) res = index
+	})
+	return res
+}
 
 mongoose.model('user', userSchema);
