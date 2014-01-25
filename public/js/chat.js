@@ -42,10 +42,10 @@ chatWindow.prototype.create = function(holder) {
 			e.preventDefault();
 			if($(this).val() != '' && $(this).val() != '↵') {
 				var msg = { to: self.id, msg: $(this).val() };
-				console.log(msg);
+				// console.log(msg);
 				if(socket != undefined) {
 					socket.emit('message-to', msg);
-					self.pushMessage({ from: { id: socket.lid, username: socket.username}, msg: msg.msg, created: '' });
+					// self.pushMessage({ from: { id: socket.lid, username: socket.username}, msg: msg.msg, created: '' });
 					$(this).val('');
 				} else
 				alert('* Error: No se ha podido enviar el mensaje');
@@ -92,7 +92,6 @@ chatWindow.prototype.pushMessage = function(msg) {
 			if($(this).attr('loading') != 'loading') {
 				$(this).attr('loading', 'loading');
 				console.log('Has llegado arriba');
-								
 			}
 		}
 	})
@@ -394,6 +393,9 @@ function zchat(_id, _username, _secret) {
 			}
 			chatWindow.prototype.barlist[auxId].pushMessage(msg)
 			chatWindow.prototype.barlist[auxId].beginAlert()			
+		// Yo soy el autor
+		} else if(fid == socket.lid) {
+			chatWindow.prototype.barlist[msg.to.id].pushMessage(msg)
 		// Chat individual abierto
 		} else if(chatWindow.prototype.barlist[fid] != undefined) {
 			chatWindow.prototype.barlist[fid].pushMessage(msg);

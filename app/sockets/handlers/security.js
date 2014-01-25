@@ -51,7 +51,6 @@ module.exports = function (_io, _socketsById) {
 			socket.offset 	= 	socketsById[chunk.id].socketList.length-1;
 			console.log("Handler Security::login User '"+ chunk.username +"' marked has connected.")
 			// console.log(socketsById[chunk.id])
-
 			
 			// Bring data to session
 			User.find({}, function(err, docs) {
@@ -67,21 +66,14 @@ module.exports = function (_io, _socketsById) {
 				
 				Alert.find({ userId: socket.lid }, function(err, docs) {
 					socket.emit('alerts-flush', docs);
-				});
-				
-				User.buildRoomList(socket.lid, function (err, neo, list) {
-					if(err) return;
-					socket.emit('open-tabs', list)
 				})
-
+				
 				User.findOne({ _id: socket.lid }, function (err, neo) {
 					if(err) return;
 					socket.emit('set-chatFriends', neo.chatFriends)
+					socket.emit('open-tabs', neo.openRooms)
 				})
-				// User.findOne({ _id: socket.lid }, function (err, neo) {
-				// 	if(err) return;
-				// 	socket.emit('open-tabs', neo.openRooms);
-				// });
+
 			});
 		})
 	}

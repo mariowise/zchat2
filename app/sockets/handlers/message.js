@@ -27,6 +27,7 @@ module.exports = function (_io, _socketsById) {
 						id 			: socket.lid,
 						username 	: socket.username
 					},
+					to: { id: to },
 					msg 	: msg.msg,
 					created : newOne.created
 				})
@@ -36,13 +37,16 @@ module.exports = function (_io, _socketsById) {
 				_.each(toa, function (item) {
 					if(socketsById[item] != undefined)
 						_.each(socketsById[item].socketList, function (sock) {
-							if(sock.lid != socket.lid)
+							// if(sock.lid != socket.lid)
 								sock.emit('message-from', {
 									from: { 
 										id: socket.lid
 										, username: socket.username 
 										, groupData: (toa.length == 1) ? undefined : docs
-									}, 
+									},
+									to: {
+										id: item
+									},
 									msg: msg.msg,
 									created: newOne.created
 								})
